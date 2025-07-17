@@ -5,12 +5,13 @@ const { obterToken } = require ('../helpers/autenticacao')
 const postTransferencias = require ('../fixtures/postTransferencias.json')
 
 describe('Tranferências', () => {
-    describe('POST /transferencias', () => {
-        let token
-            beforeEach(async () => {
-                token = await obterToken('julio.lima', '123456')
-            })
 
+    let token
+    beforeEach(async () => {
+        token = await obterToken('julio.lima', '123456')
+    })
+
+    describe('POST /transferencias', () => {
             it('Deve retornar sucesso com 201 quando o valor da tranferência for igual ou acima de R$ 10,00', async () =>{
                 const bodyTransferencias = { ...postTransferencias}
 
@@ -41,5 +42,31 @@ describe('Tranferências', () => {
         })
     })
     
+    describe('GET /transferencias/{id}', () => {
+        it('Deve retornar sucesso com 200 e dados iguais ao registro de transferencia contido no banco de dados quando o Id for válido', async () => {
+            const resposta = await request(process.env.BASE_URL)
+                .get('/transferencias/7')
+                .set('Authorization', `Bearer ${token}`)
+
+                expect(resposta.status).to.equal(200)
+                expect(resposta.body.id).to.equal(7)
+                expect(resposta.body.id).to.be.a('number')
+                expect(resposta.body.conta_origem_id).to.equal(1)
+                expect(resposta.body.conta_destino_id).to.equal(2)
+                expect(resposta.body.valor).to.equal(11.00)
+        })
+    })
     
+    describe('GET /transferencias', () => {
+        it('Deve retornar 10 elementos na paginaçã quando informar limite de 10 registros', async ()=> {
+            const resposta = await request(process.env.BASE_URL)
+                .get('/transferencias')
+                .set('Authorization', `Bearer ${token}`)
+
+                expect(resposta.status).to.equal(200)
+                expect(resposta.body.limit).to.equal(10)
+                expect(resposta.body.transferencias).to.have.lengthOf(10)
+                
+        })
+    })
 })
